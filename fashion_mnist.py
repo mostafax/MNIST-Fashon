@@ -5,6 +5,15 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
+# code will run in gpu if available and if the flag is set to True, else it will run on cpu
+use_gpu = True
+device = torch.device('cuda' if torch.cuda.is_available() and use_gpu else 'cpu')
+map_loc = None if torch.cuda.is_available() and use_gpu else 'cpu'
+
+
+def get_num_correct(preds, labels):
+    return preds.argmax(dim=1).eq(labels).sum().item()
+
 
 class Network(nn.Module):
     def __init__(self):
@@ -45,15 +54,23 @@ train_data = torchvision.datasets.FashionMNIST(
     train=True,
     download=True,
     transform=transforms.Compose([transforms.ToTensor()]))
-train_loader = torch.utils.data.DataLoader(train_data, batch_size=100)
-batch = next(iter(train_loader))
-images, labels = batch
 
+
+train_loader = torch.utils.data.DataLoader(train_data, batch_size=100)
+total_loss = 0
+total_correct = 0
 network = Network()
-preds = network(images)
-loss = F.cross_entropy(preds, labels)
-print(loss.item())
-loss.backwaed()
 optimizer = optim.Adam(network.parameters(), lr=0.01)
-loss.item()
-optimizer.step()
+
+for batch in train_loader:
+    images, labels = batch
+    preds = network(images)
+    loss = F.cross_entropy(preds, labels)
+    optimizer.zero_grad()
+    loss.backward()
+    loss.item()
+    optimizer.step()
+    total_loss += loss.item()
+    total_correct += get_num_correct(preds, labels)
+print("Loss", total_loss, "Total coreect =",total_correct)
+print(total_correct / len(train_data))
