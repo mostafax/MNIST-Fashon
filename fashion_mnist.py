@@ -56,21 +56,21 @@ train_data = torchvision.datasets.FashionMNIST(
     transform=transforms.Compose([transforms.ToTensor()]))
 
 
-train_loader = torch.utils.data.DataLoader(train_data, batch_size=100)
-total_loss = 0
-total_correct = 0
+train_loader = torch.utils.data.DataLoader(train_data, batch_size=1000)
 network = Network()
 optimizer = optim.Adam(network.parameters(), lr=0.01)
-
-for batch in train_loader:
-    images, labels = batch
-    preds = network(images)
-    loss = F.cross_entropy(preds, labels)
-    optimizer.zero_grad()
-    loss.backward()
-    loss.item()
-    optimizer.step()
-    total_loss += loss.item()
-    total_correct += get_num_correct(preds, labels)
-print("Loss", total_loss, "Total coreect =",total_correct)
+for epoch in range(5):
+    total_loss = 0
+    total_correct = 0
+    for batch in train_loader:
+        images, labels = batch
+        preds = network(images)
+        loss = F.cross_entropy(preds, labels)
+        optimizer.zero_grad()
+        loss.backward()
+        loss.item()
+        optimizer.step()
+        total_loss += loss.item()
+        total_correct += get_num_correct(preds, labels)
+    print("Epoch num ",epoch, "Loss", total_loss, "Total coreect =", total_correct)
 print(total_correct / len(train_data))
